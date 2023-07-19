@@ -66,29 +66,34 @@ async def rainbow(interaction: discord.Interaction):
     mqtt_client.publish("home/room/golira", "RAINBOW")
     await interaction.response.send_message(f"Activated Rainbow mode")
 
-@bot.tree.command(name="status")
-@app_commands.describe()
-async def status(interaction: discord.Interaction):
-    # The payload "STATUS" is a command for the ESP8266 to send its current status as a MQTT message
-    mqtt_client.publish("home/room/golira", "STATUS")
-    # Wait for the status message to arrive. Timeout after 5 seconds.
-    try:
-        message = await bot.wait_for('mqtt_message', timeout=5.0)
-        await interaction.response.send_message(f"Current status: `{message.payload}`")
-    except asyncio.TimeoutError:
-        await interaction.response.send_message("Timeout while waiting for status update")
+@bot.tree.command(name="breathing_off")
+async def breathing_off(interaction: discord.Interaction):
+    mqtt_client.publish("home/room/golira", "BREATHING_OFF")
+    await interaction.response.send_message("Deactivated Breathing mode")
 
-@bot.tree.command(name="speed")
-@app_commands.describe()
-async def speed(interaction: discord.Interaction):
-    # The payload "SPEED" is a command for the ESP8266 to send its current speed as a MQTT message
-    mqtt_client.publish("home/room/golira", "SPEED")
-    # Wait for the speed message to arrive. Timeout after 5 seconds.
-    try:
-        message = await bot.wait_for('mqtt_message', timeout=5.0)
-        await interaction.response.send_message(f"Current speed: `{message.payload}`")
-    except asyncio.TimeoutError:
-        await interaction.response.send_message("Timeout while waiting for speed update")
+# @bot.tree.command(name="status")
+# @app_commands.describe()
+# async def status(interaction: discord.Interaction):
+#     # The payload "STATUS" is a command for the ESP8266 to send its current status as a MQTT message
+#     mqtt_client.publish("home/room/golira", "STATUS")
+#     # Wait for the status message to arrive. Timeout after 5 seconds.
+#     try:
+#         message = await bot.wait_for('mqtt_message', timeout=5.0)
+#         await interaction.response.send_message(f"Current status: `{message.payload}`")
+#     except asyncio.TimeoutError:
+#         await interaction.response.send_message("Timeout while waiting for status update")
+
+# @bot.tree.command(name="speed")
+# @app_commands.describe()
+# async def speed(interaction: discord.Interaction):
+#     # The payload "SPEED" is a command for the ESP8266 to send its current speed as a MQTT message
+#     mqtt_client.publish("home/room/golira", "SPEED")
+#     # Wait for the speed message to arrive. Timeout after 5 seconds.
+#     try:
+#         message = await bot.wait_for('mqtt_message', timeout=5.0)
+#         await interaction.response.send_message(f"Current speed: `{message.payload}`")
+#     except asyncio.TimeoutError:
+#         await interaction.response.send_message("Timeout while waiting for speed update")
 
 
 bot.run(TOKEN)

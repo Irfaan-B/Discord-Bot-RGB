@@ -17,6 +17,7 @@ PubSubClient client(espClient);
 
 int mode = 0;  // 0 for solid colors, 1 for breathing, 2 for rainbow
 int speed = 5;  // speed of transitions, can be adjusted
+bool colorChange = false;
 
 int currentRed = 255;
 int currentGreen = 255;
@@ -41,14 +42,14 @@ void setup() {
   client.setCallback(callback);
 }
 
+
+
 void callback(char* topic, byte* payload, unsigned int length) {
   String messageTemp;
 
   for (int i = 0; i < length; i++) {
     messageTemp += (char)payload[i];
   }
-
-  clear();  // Clear colors
 
   if (messageTemp.startsWith("RGB")) {
     // Split the message by comma
@@ -60,27 +61,39 @@ void callback(char* topic, byte* payload, unsigned int length) {
     currentGreen = messageTemp.substring(commaIndex1 + 1, commaIndex2).toInt();
     currentBlue = messageTemp.substring(commaIndex2 + 1).toInt();
 
+    colorChange = true;
+
     // Update the LEDs
     analogWrite(RED_PIN, currentRed);
     analogWrite(GREEN_PIN, currentGreen);
     analogWrite(BLUE_PIN, currentBlue);
-
-    mode = 0;
-  } else if (messageTemp == "BREATHING") {
+  } 
+  else if (messageTemp == "BREATHING") {
     mode = 1;
     Serial.println("Breathing Mode Activated!");
-  } else if (messageTemp == "RAINBOW") {
+  } 
+  else if (messageTemp == "RAINBOW") {
     mode = 2;
     Serial.println("Rainbow Mode Activated!");
-  } else if (messageTemp == "SPEEDUP") {
-    speed -= 1;
+  } 
+  else if (messageTemp == "SPEEDUP") {
+    speed -= 3;
     if (speed < 1) speed = 1;
     Serial.println("Speed Increased!");
-  } else if (messageTemp == "SPEEDDOWN") {
-    speed += 1;
+  } 
+  else if (messageTemp == "SPEEDDOWN") {
+    speed += 3;
     if (speed > 10) speed = 10;
     Serial.println("Speed Decreased!");
-  } else if (messageTemp == "STATUS") {
+  }
+  else if (messageTemp == "BREATHING_OFF") {
+    mode = 0;
+    analogWrite(RED_PIN, currentRed);
+    analogWrite(GREEN_PIN, currentGreen);
+    analogWrite(BLUE_PIN, currentBlue);
+    Serial.println("Breathing Mode Deactivated!");
+  }
+  else if (messageTemp == "STATUS") {
     String statusMessage = "Mode: ";
     if (mode == 0) {
       statusMessage += "Color, ";
@@ -94,6 +107,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     client.publish(MQTT_STATUS_TOPIC, statusMessage.c_str());
   }
 }
+
+
+
 
 void clear() {
   analogWrite(RED_PIN, 255);  // invert output for common anode
@@ -110,32 +126,42 @@ void loop() {
   if (mode == 1) {
     // Breathing mode
     for (int i = 0; i < 255; i++) {
+      if (colorChange) {
+        colorChange = false;
+        break;
+      }
       analogWrite(RED_PIN, constrain(currentRed + i, 0, 255));
       analogWrite(GREEN_PIN, constrain(currentGreen + i, 0, 255));
       analogWrite(BLUE_PIN, constrain(currentBlue + i, 0, 255));
-      delay(speed * 10);
+      delay(speed);
     }
     for (int i = 255; i > 0; i--) {
+      if (colorChange) {
+        colorChange = false;
+        break;
+      }
       analogWrite(RED_PIN, constrain(currentRed + i, 0, 255));
       analogWrite(GREEN_PIN, constrain(currentGreen + i, 0, 255));
       analogWrite(BLUE_PIN, constrain(currentBlue + i, 0, 255));
-      delay(speed * 10);
+      delay(speed);
     }
   } else if (mode == 2) {
     // Rainbow mode
     for (int i = 0; i < 255; i++) {
+      if (colorChange) break;
       analogWrite(RED_PIN, i);
-      delay(speed * 10);
+      delay(speed * 5);
     }
     for (int i = 0; i < 255; i++) {
+      if (colorChange) break;
       analogWrite(GREEN_PIN, i);
-      delay(speed * 10);
+      delay(speed * 5);
     }
     for (int i = 0; i < 255; i++) {
+      if (colorChange) break;
       analogWrite(BLUE_PIN, i);
-      delay(speed * 10);
+      delay(speed * 5);
     }
-    clear();
   }
 }
 
