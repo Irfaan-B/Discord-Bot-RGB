@@ -58,6 +58,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (messageTemp.startsWith("RGB")) {
+    mode = 0;
+    Serial.println("Switching to solid color mode");
     // Split the message by comma
     int commaIndex1 = messageTemp.indexOf(",");
     int commaIndex2 = messageTemp.lastIndexOf(",");
@@ -76,10 +78,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
   } 
   else if (messageTemp == "BREATHING") {
     mode = 1;
+    Serial.println("Switching to breathing mode");
     Serial.println("Breathing Mode Activated!");
   } 
   else if (messageTemp == "RAINBOW") {
     mode = 2;
+    Serial.println("Switching to rainbow mode");
     Serial.println("Rainbow Mode Activated!");
   } 
   else if (messageTemp == "SPEEDUP") {
@@ -99,6 +103,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
     analogWrite(BLUE_PIN, currentBlue);
     Serial.println("Breathing Mode Deactivated!");
   }
+  else if (messageTemp == "RAINBOW_OFF") {
+  mode = 0;
+  analogWrite(RED_PIN, currentRed);
+  analogWrite(GREEN_PIN, currentGreen);
+  analogWrite(BLUE_PIN, currentBlue);
+  Serial.println("Rainbow Mode Deactivated!");
+}
   else if (messageTemp == "STATUS") {
     String statusMessage = "Mode: ";
     if (mode == 0) {
@@ -139,8 +150,8 @@ RGB hslToRgb(float h, float s, float l) {
   RGB color = {int(r * 255), int(g * 255), int(b * 255)};
   
   // Debugging
-  Serial.println("Converted HSL(" + String(h) + ", " + String(s) + ", " + String(l) + ")");
-  Serial.println("To RGB(" + String(color.r) + ", " + String(color.g) + ", " + String(color.b) + ")");
+  //Serial.println("Converted HSL(" + String(h) + ", " + String(s) + ", " + String(l) + ")");
+  //Serial.println("To RGB(" + String(color.r) + ", " + String(color.g) + ", " + String(color.b) + ")");
 
   return color;
 }
@@ -171,30 +182,34 @@ void loop() {
         colorChange = false;
         break;
       }
-      writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
-
+      writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed * i / 255, currentGreen * i / 255, currentBlue * i / 255);
       delay(speed);
+      if (mode != 1) return;
     }
     for (int i = 255; i > 0; i--) {
       if (colorChange) {
         colorChange = false;
         break;
       }
-      writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
-
+      writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed * i / 255, currentGreen * i / 255, currentBlue * i / 255);
       delay(speed);
+      if (mode != 1) return;
     }
   } else if (mode == 2) {
     // Rainbow mode
+    Serial.println("Running rainbow animation");
 for (int i = 0; i < 360; i++) {
   RGB color = hslToRgb(i / 360.0, 1.0, 0.5);
   writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, color.r, color.g, color.b);
   
   // Debugging
   Serial.println("Writing RGB(" + String(color.r) + ", " + String(color.g) + ", " + String(color.b) + ")");
-  
   delay(speed);
+  if (mode != 2) return;
 }
+  } else {
+    Serial.println("Displaying solid color");
+    writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
   }
 }
 

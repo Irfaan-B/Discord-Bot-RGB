@@ -31,11 +31,11 @@ async def on_ready():
 
 
 
-@bot.tree.command(name="mqtt")
-@app_commands.describe(topic = "MQTT topic", payload = "MQTT message")
-async def mqtt(interaction: discord.Interaction, topic: str, payload: str):
-    mqtt_client.publish(topic, payload)
-    await interaction.response.send_message(f"Sent `{payload}` to `{topic}`")
+# @bot.tree.command(name="mqtt")
+# @app_commands.describe(topic = "MQTT topic", payload = "MQTT message")
+# async def mqtt(interaction: discord.Interaction, topic: str, payload: str):
+#     mqtt_client.publish(topic, payload)
+#     await interaction.response.send_message(f"Sent `{payload}` to `{topic}`")
 
 @bot.tree.command(name="rgb")
 async def rgb(interaction: discord.Interaction, red: int, green: int, blue: int):
@@ -70,6 +70,11 @@ async def rainbow(interaction: discord.Interaction):
 async def breathing_off(interaction: discord.Interaction):
     mqtt_client.publish("home/room/golira", "BREATHING_OFF")
     await interaction.response.send_message("Deactivated Breathing mode")
+
+@bot.tree.command(name="rainbow_off")
+async def rainbow_off(interaction: discord.Interaction):
+    mqtt_client.publish("home/room/golira", "RAINBOW_OFF")
+    await interaction.response.send_message("Deactivated Rainbow mode")
 
 # @bot.tree.command(name="status")
 # @app_commands.describe()
