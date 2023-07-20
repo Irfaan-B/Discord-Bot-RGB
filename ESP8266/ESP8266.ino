@@ -19,9 +19,15 @@ int mode = 0;  // 0 for solid colors, 1 for breathing, 2 for rainbow
 int speed = 5;  // speed of transitions, can be adjusted
 bool colorChange = false;
 
-int currentRed = 255;
-int currentGreen = 255;
-int currentBlue = 255;
+int currentRed = 0;
+int currentGreen = 0;
+int currentBlue = 0;
+
+struct RGB {
+  int r;
+  int g;
+  int b;
+};
 
 void setup() {
   pinMode(RED_PIN, OUTPUT);
@@ -108,7 +114,42 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
+RGB hslToRgb(float h, float s, float l) {
+  float r, g, b;
 
+  if(s == 0){
+    r = g = b = l; // achromatic
+  } else {
+    auto hue2rgb = [](float p, float q, float t) {
+      if(t < 0) t += 1;
+      if(t > 1) t -= 1;
+      if(t < 1/6.0) return p + (q - p) * 6.0f * t;
+      if(t < 1/2.0) return q;
+      if(t < 2/3.0) return p + (q - p) * (2/3.0f - t) * 6.0f;
+      return p;
+    };
+
+    float q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    float p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3.0);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3.0);
+  }
+
+  RGB color = {int(r * 255), int(g * 255), int(b * 255)};
+  
+  // Debugging
+  Serial.println("Converted HSL(" + String(h) + ", " + String(s) + ", " + String(l) + ")");
+  Serial.println("To RGB(" + String(color.r) + ", " + String(color.g) + ", " + String(color.b) + ")");
+
+  return color;
+}
+
+void writeRGB(int redPin, int greenPin, int bluePin, int r, int g, int b) {
+  analogWrite(redPin, 255 - r);
+  analogWrite(greenPin, 255 - g);
+  analogWrite(bluePin, 255 - b);
+}
 
 
 void clear() {
@@ -130,9 +171,8 @@ void loop() {
         colorChange = false;
         break;
       }
-      analogWrite(RED_PIN, constrain(currentRed + i, 0, 255));
-      analogWrite(GREEN_PIN, constrain(currentGreen + i, 0, 255));
-      analogWrite(BLUE_PIN, constrain(currentBlue + i, 0, 255));
+      writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
+
       delay(speed);
     }
     for (int i = 255; i > 0; i--) {
@@ -140,28 +180,21 @@ void loop() {
         colorChange = false;
         break;
       }
-      analogWrite(RED_PIN, constrain(currentRed + i, 0, 255));
-      analogWrite(GREEN_PIN, constrain(currentGreen + i, 0, 255));
-      analogWrite(BLUE_PIN, constrain(currentBlue + i, 0, 255));
+      writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
+
       delay(speed);
     }
   } else if (mode == 2) {
     // Rainbow mode
-    for (int i = 0; i < 255; i++) {
-      if (colorChange) break;
-      analogWrite(RED_PIN, i);
-      delay(speed * 5);
-    }
-    for (int i = 0; i < 255; i++) {
-      if (colorChange) break;
-      analogWrite(GREEN_PIN, i);
-      delay(speed * 5);
-    }
-    for (int i = 0; i < 255; i++) {
-      if (colorChange) break;
-      analogWrite(BLUE_PIN, i);
-      delay(speed * 5);
-    }
+for (int i = 0; i < 360; i++) {
+  RGB color = hslToRgb(i / 360.0, 1.0, 0.5);
+  writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, color.r, color.g, color.b);
+  
+  // Debugging
+  Serial.println("Writing RGB(" + String(color.r) + ", " + String(color.g) + ", " + String(color.b) + ")");
+  
+  delay(speed);
+}
   }
 }
 
