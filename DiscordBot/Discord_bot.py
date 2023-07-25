@@ -11,6 +11,7 @@ bot = commands.Bot(command_prefix="!", intents = discord.Intents.all())
 broker_address = "test.mosquitto.org"
 mqtt_client = mqtt.Client("discord_bot_golira_epico")
 
+
 def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
 
@@ -40,9 +41,9 @@ async def on_ready():
 @bot.tree.command(name="rgb")
 async def rgb(interaction: discord.Interaction, red: int, green: int, blue: int):
     # Invert the values for common anode RGB LED
-    inverted_red = 255 - red
-    inverted_green = 255 - green
-    inverted_blue = 255 - blue
+    inverted_red = red
+    inverted_green = green
+    inverted_blue = blue
     mqtt_client.publish("home/room/golira", f"RGB{inverted_red},{inverted_green},{inverted_blue}")
     await interaction.response.send_message(f"Set color to RGB({red}, {green}, {blue})")
 

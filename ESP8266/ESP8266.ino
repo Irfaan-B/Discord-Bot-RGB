@@ -23,6 +23,8 @@ int currentRed = 0;
 int currentGreen = 0;
 int currentBlue = 0;
 
+int rainbowStep = 0;
+
 struct RGB {
   int r;
   int g;
@@ -58,11 +60,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (messageTemp.startsWith("RGB")) {
+    Serial.println(messageTemp);
     mode = 0;
     Serial.println("Switching to solid color mode");
     // Split the message by comma
     int commaIndex1 = messageTemp.indexOf(",");
     int commaIndex2 = messageTemp.lastIndexOf(",");
+
+    Serial.println("commaIndex1: " + String(commaIndex1));
+    Serial.println("commaIndex2: " + String(commaIndex2));
 
     // Get each value
     currentRed = messageTemp.substring(3, commaIndex1).toInt();
@@ -72,9 +78,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
     colorChange = true;
 
     // Update the LEDs
-    analogWrite(RED_PIN, currentRed);
-    analogWrite(GREEN_PIN, currentGreen);
-    analogWrite(BLUE_PIN, currentBlue);
+    writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
+
+    Serial.println("Received RGB values:");
+    Serial.println(currentRed);
+    Serial.println(currentGreen);
+    Serial.println(currentBlue);
+
   } 
   else if (messageTemp == "BREATHING") {
     mode = 1;
@@ -197,18 +207,24 @@ void loop() {
     }
   } else if (mode == 2) {
     // Rainbow mode
-    Serial.println("Running rainbow animation");
-for (int i = 0; i < 360; i++) {
-  RGB color = hslToRgb(i / 360.0, 1.0, 0.5);
-  writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, color.r, color.g, color.b);
-  
-  // Debugging
-  Serial.println("Writing RGB(" + String(color.r) + ", " + String(color.g) + ", " + String(color.b) + ")");
+    //Serial.println("Running rainbow animation");
+    if(rainbowStep >= 360){
+      rainbowStep = 0;
+    }
+
+    RGB color = hslToRgb(rainbowStep / 360.0, 1.0, 0.5);
+    writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, color.r, color.g, color.b);
+    
+    // Debugging
+    Serial.println("Writing RGB(" + String(color.r) + ", " + String(color.g) + ", " + String(color.b) + ")");
+    
+    rainbowStep++;
+    delay(speed);
+  } 
   delay(speed);
   if (mode != 2) return;
-}
-  } else {
-    Serial.println("Displaying solid color");
+ else {
+    //Serial.println("Displaying solid color");
     writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
   }
 }
