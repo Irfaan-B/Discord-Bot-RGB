@@ -5,10 +5,6 @@
 #define GREEN_PIN 4
 #define BLUE_PIN 0
 
-#define RED_PIN2 14
-#define GREEN_PIN2 12
-#define BLUE_PIN2 13
-
 #define WIFI_SSID "Mika"
 #define WIFI_PASSWORD "Stinkie100"
 #define MQTT_SERVER "test.mosquitto.org"
@@ -39,10 +35,6 @@ void setup() {
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
-
-  pinMode(RED_PIN2, OUTPUT);
-  pinMode(GREEN_PIN2, OUTPUT);
-  pinMode(BLUE_PIN2, OUTPUT);
 
   analogWriteRange(255);  // to map analogWrite between 0-255
 
@@ -87,7 +79,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
     // Update the LEDs
     writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
-    writeRGB(RED_PIN2, GREEN_PIN2, BLUE_PIN2, currentRed, currentGreen, currentBlue);
 
     Serial.println("Received RGB values:");
     Serial.println(currentRed);
@@ -117,14 +108,16 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   else if (messageTemp == "BREATHING_OFF") {
     mode = 0;
-    writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
-    writeRGB(RED_PIN2, GREEN_PIN2, BLUE_PIN2, currentRed, currentGreen, currentBlue);
+    analogWrite(RED_PIN, currentRed);
+    analogWrite(GREEN_PIN, currentGreen);
+    analogWrite(BLUE_PIN, currentBlue);
     Serial.println("Breathing Mode Deactivated!");
   }
   else if (messageTemp == "RAINBOW_OFF") {
   mode = 0;
-    writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
-    writeRGB(RED_PIN2, GREEN_PIN2, BLUE_PIN2, currentRed, currentGreen, currentBlue);
+  analogWrite(RED_PIN, currentRed);
+  analogWrite(GREEN_PIN, currentGreen);
+  analogWrite(BLUE_PIN, currentBlue);
   Serial.println("Rainbow Mode Deactivated!");
 }
   else if (messageTemp == "STATUS") {
@@ -200,7 +193,6 @@ void loop() {
         break;
       }
       writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed * i / 255, currentGreen * i / 255, currentBlue * i / 255);
-      writeRGB(RED_PIN2, GREEN_PIN2, BLUE_PIN2, currentRed * i / 255, currentGreen * i / 255, currentBlue * i / 255);
       delay(speed);
       if (mode != 1) return;
     }
@@ -210,7 +202,6 @@ void loop() {
         break;
       }
       writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed * i / 255, currentGreen * i / 255, currentBlue * i / 255);
-      writeRGB(RED_PIN2, GREEN_PIN2, BLUE_PIN2, currentRed * i / 255, currentGreen * i / 255, currentBlue * i / 255);
       delay(speed);
       if (mode != 1) return;
     }
@@ -223,7 +214,6 @@ void loop() {
 
     RGB color = hslToRgb(rainbowStep / 360.0, 1.0, 0.5);
     writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, color.r, color.g, color.b);
-    writeRGB(RED_PIN2, GREEN_PIN2, BLUE_PIN2, color.r, color.g, color.b);
     
     // Debugging
     Serial.println("Writing RGB(" + String(color.r) + ", " + String(color.g) + ", " + String(color.b) + ")");
@@ -236,7 +226,6 @@ void loop() {
  else {
     //Serial.println("Displaying solid color");
     writeRGB(RED_PIN, GREEN_PIN, BLUE_PIN, currentRed, currentGreen, currentBlue);
-    writeRGB(RED_PIN2, GREEN_PIN2, BLUE_PIN2, currentRed, currentGreen, currentBlue);
   }
 }
 
